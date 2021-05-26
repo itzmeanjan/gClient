@@ -36,9 +36,6 @@ func main() {
 	if *client < 1 {
 		*client = 1
 	}
-	if *repeat < 1 {
-		*repeat = 1
-	}
 
 	ctx, cancel := context.WithCancel(context.Background())
 	fullAddr := fmt.Sprintf("%s:%d", *addr, *port)
@@ -78,7 +75,7 @@ func main() {
 					break OUT_1
 				}
 
-				log.Printf("[gClient] Publish iteration : %d [ in %s ] ✅\n", i+1, time.Since(start))
+				log.Printf("[gClient] Publish iteration : %d [ in %s ]\n", i+1, time.Since(start))
 			}
 
 		}
@@ -101,7 +98,7 @@ func main() {
 					break OUT_2
 				}
 
-				log.Printf("[gClient] Publish iteration : %d [ in %s ] ✅\n", i+1, time.Since(start))
+				log.Printf("[gClient] Publish iteration : %d [ in %s ]\n", i+1, time.Since(start))
 			}
 
 		}

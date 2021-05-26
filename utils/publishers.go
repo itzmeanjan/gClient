@@ -32,7 +32,7 @@ func (p *Publishers) PublishMsg(topics TopicList) error {
 }
 
 func prepareMsg(topics TopicList) (*ops.Msg, error) {
-	now := uint64(time.Now().UTC().Nanosecond() / 1_000_000)
+	now := uint64(time.Now().UnixNano() / 1_000_000)
 
 	buf := new(bytes.Buffer)
 	if err := binary.Write(buf, binary.BigEndian, now); err != nil {
