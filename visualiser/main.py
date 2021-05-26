@@ -8,6 +8,22 @@ from re import compile as re_compile
 from math import ceil
 
 
+def aggregated_count_by_slot(slots: List[Tuple[int, int]], bucket: Dict[int, int]) -> Dict[Tuple[int, int], int]:
+    splitted = {}
+    for slot in slots:
+        total = 0
+        (start, end) = slot
+        while start <= end:
+            if start in bucket:
+                total += bucket[start]
+
+            start += 1
+
+        splitted[slot] = total
+
+    return splitted
+
+
 def splitted_delay_spectrum(delays: List[int], slot: int) -> List[Tuple[int, int]]:
     min_delay = min(delays)
     max_delay = max(delays)
@@ -83,8 +99,8 @@ def main():
     for file in found:
         accumulate_data(file, bucket)
 
-    delays = bucket.keys()
-    print(splitted_delay_spectrum(delays, args.slot))
+    slots = splitted_delay_spectrum(bucket.keys(), args.slot)
+    print(aggregated_count_by_slot(slots, bucket))
 
 
 if __name__ == '__main__':
