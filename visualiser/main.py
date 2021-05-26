@@ -6,6 +6,58 @@ from os import walk
 from typing import Dict, List, Tuple
 from re import compile as re_compile
 from math import ceil
+from matplotlib import pyplot as plt
+import seaborn as sns
+
+
+def visualise(data: Dict[Tuple[int, int], int], sink: str, title: str) -> bool:
+    if not data:
+        return False
+
+    try:
+        tmp = [(f'{start}ms - {end}ms', count)
+               for (start, end), count in data.items()]
+        x = [t[0] for t in tmp]
+        y = [t[1] for t in tmp]
+
+        with plt.style.context('seaborn-darkgrid'):
+            fig = plt.Figure(
+                figsize=(16, 9),
+                dpi=100)
+
+            sns.barplot(
+                x=x,
+                y=y,
+                orient='v',
+                ax=fig.gca())
+
+            for j, k in enumerate(fig.gca().patches):
+                fig.gca().text(k.get_x() + k.get_width() / 2,
+                               k.get_y() + k.get_height() * .2 + .1,
+                               y[j],
+                               ha='center',
+                               rotation=0,
+                               fontsize=12,
+                               color='black')
+
+            fig.gca().set_xlabel('Message Received After Delay',
+                                 labelpad=12)
+            fig.gca().set_ylabel('#-of Messages',
+                                 labelpad=12)
+            fig.gca().set_title(title,
+                                pad=16,
+                                fontsize=20)
+
+            fig.savefig(
+                sink,
+                bbox_inches='tight',
+                pad_inches=.5)
+            plt.close(fig)
+
+        return True
+    except Exception as e:
+        print(f'Error : ${e}')
+        return False
 
 
 def aggregated_count_by_slot(slots: List[Tuple[int, int]], bucket: Dict[int, int]) -> Dict[Tuple[int, int], int]:
@@ -100,7 +152,8 @@ def main():
         accumulate_data(file, bucket)
 
     slots = splitted_delay_spectrum(bucket.keys(), args.slot)
-    print(aggregated_count_by_slot(slots, bucket))
+    print(visualise(aggregated_count_by_slot(slots, bucket), 'out.png',
+                    'Aggregated Message Reception Delay with `pub0sub`'))
 
 
 if __name__ == '__main__':
