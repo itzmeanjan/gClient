@@ -15,3 +15,4 @@
 # vendor/
 
 gclient-*
+log_*.csv

@@ -29,7 +29,7 @@ func LogMsg(fd *os.File, buf *bytes.Buffer, sent uint64, received uint64, topic 
 		buf.Reset()
 	}()
 
-	n, err := buf.WriteString(fmt.Sprintf("%d; %d; %s", sent, received, topic))
+	n, err := buf.WriteString(fmt.Sprintf("%d; %d; %s\n", sent, received, topic))
 	if err != nil {
 		return err
 	}

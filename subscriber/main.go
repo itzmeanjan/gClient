@@ -56,7 +56,7 @@ func main() {
 			go func() {
 				defer func() {
 					if err := sub.Disconnect(); err != nil {
-						log.Printf("[gClient] Failed to disconnect : %s\n", err.Error())
+						log.Printf("[gClient] Error : %s\n", err.Error())
 					}
 				}()
 
@@ -64,7 +64,7 @@ func main() {
 				var fd *os.File
 
 				if *out {
-					handle, err := os.OpenFile(fmt.Sprintf("./out/%d.csv", id), os.O_CREATE|os.O_APPEND, os.ModeAppend)
+					handle, err := os.OpenFile(fmt.Sprintf("log_%d.csv", id), os.O_CREATE|os.O_RDWR, 0x1b6)
 					if err != nil {
 						log.Printf("[gClient] Error : %s\n", err.Error())
 						return
@@ -72,6 +72,12 @@ func main() {
 
 					fd = handle
 				}
+
+				defer func() {
+					if err := fd.Close(); err != nil {
+						log.Printf("[gClient] Error : %s\n", err.Error())
+					}
+				}()
 
 				for {
 					select {
