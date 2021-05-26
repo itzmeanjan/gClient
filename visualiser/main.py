@@ -3,8 +3,27 @@
 from argparse import ArgumentParser
 from os.path import abspath, isabs, isdir, join
 from os import walk
-from typing import List
+from typing import Dict, List
 from re import compile as re_compile
+
+
+def accumulate_data(file: str, bucket: Dict[int, int]):
+    with open(file) as fd:
+        while True:
+            ln = fd.readline()
+            if not ln:
+                break
+
+            ts = [i.strip() for i in ln.split(';')][:2]
+            sent = int(ts[0])
+            received = int(ts[1])
+            diff = received - sent
+            if diff not in bucket:
+                bucket[diff] = 1
+            else:
+                bucket[diff] = bucket[diff] + 1
+
+    return
 
 
 def find_files(dir: str) -> List[str]:
@@ -34,7 +53,14 @@ def main():
         print('Expected path to directory !')
         return
 
-    print(find_files(target_dir))
+    found = find_files(target_dir)
+    if not found:
+        print('Directory walk found no file !')
+        return
+
+    bucket = {}
+    accumulate_data(found[0], bucket)
+    print(bucket)
 
 
 if __name__ == '__main__':
