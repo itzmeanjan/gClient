@@ -59,7 +59,7 @@ There're 3 components
 - Simulator
     - [Publisher](#publisher)
     - [Subscriber](#subscriber)
-- Visualiser
+- [Visualiser](#visualiser)
 
 We'll go through each of them
 
@@ -83,7 +83,7 @@ May be run with/ anyhow you please
 ./gclient-pub -addr 127.0.0.1 -port 13000 -topic a -topic b -topic c -repeat 0 -client 64 -delay 500ms
 ```
 
-## Subscriber
+### Subscriber
 
 Another binary ready to use -- `gclient-sub`
 
@@ -103,3 +103,37 @@ You might want to run it with
 ```bash
 ./gclient-sub -addr 127.0.0.1 -port 13000 -topic a -topic b -topic c -client 64
 ```
+
+When log generation is enabled **( default )** you'll see some new log files created in **CWD**. There'll will be **N**-many log files generated, where **N = concurrent subscriber count**
+
+```bash
+find . -name 'log_*.csv' # you may try
+```
+
+They're nothing but append only logs in CSV format, recording
+
+publisher-sent-at-timestamp `( t1 )` | receiver-received-at-timestamp `( t2 )` | topic-name
+--- | --- | ---
+1622019788183 | 1622019788194 | a
+1622019788187 | 1622019788195 | b
+1622019788190 | 1622019788199 | c
+1622019788192 | 1622019788199 | a
+
+So definitely
+
+```
+t2 > t1 # satisfying happens before relation
+```
+
+These files to be consumed by visualiser for generating plots demostrating system performance i.e. **how long does it generally take for a message to reach destination from when it was sent ?**
+
+---
+
+You can disable log generation
+
+```bash
+./gclient-sub -topic a -out false # enabled by default
+```
+
+---
+
