@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"context"
 	"flag"
 	"fmt"
@@ -20,6 +21,7 @@ var (
 	port     = flag.Uint64("port", 13000, "Connect to port")
 	client   = flag.Uint64("client", 1, "#-of concurrent subscribers to use")
 	capacity = flag.Uint64("capacity", 256, "Pending message queue capacity")
+	out      = flag.Bool("out", true, "Persist subscriber log")
 	topics   utils.TopicList
 )
 
@@ -48,8 +50,8 @@ func main() {
 
 	log.Printf("[gClient] Connected to %s [ %d clients ] ✅\n", fullAddr, *client)
 
-	for _, sub := range subs {
-		func(sub *subscriber.Subscriber) {
+	for id, sub := range subs {
+		func(id int, sub *subscriber.Subscriber) {
 
 			go func() {
 				defer func() {
@@ -58,25 +60,44 @@ func main() {
 					}
 				}()
 
+				var buf = new(bytes.Buffer)
+				var fd *os.File
+
+				if *out {
+					handle, err := os.OpenFile(fmt.Sprintf("./out/%d.csv", id), os.O_CREATE|os.O_APPEND, os.ModeAppend)
+					if err != nil {
+						log.Printf("[gClient] Error : %s\n", err.Error())
+						return
+					}
+
+					fd = handle
+				}
+
 				for {
 					select {
 					case <-ctx.Done():
 						return
 
 					case <-sub.Watch():
+						received := uint64(time.Now().UnixNano() / 1_000_000)
 						msg := sub.Next()
-						ts, err := utils.DeserialiseMsg(msg)
+						sent, err := utils.DeserialiseMsg(msg)
 						if err != nil {
 							log.Printf("[gClient] Error : %s\n", err.Error())
 							return
 						}
 
-						log.Printf("[gClient] Received : `%d` from `%s`\n", ts, msg.Topic)
+						if err := utils.LogMsg(fd, buf, sent, received, msg.Topic); err != nil {
+							log.Printf("[gClient] Error : %s\n", err.Error())
+							break
+						}
+
+						log.Printf("[gClient] Received : `%d` from `%s`\n", sent, msg.Topic)
 					}
 				}
 			}()
 
-		}(sub)
+		}(id, sub)
 	}
 
 	interruptChan := make(chan os.Signal, 1)
@@ -87,5 +108,4 @@ func main() {
 	<-time.After(time.Second)
 
 	log.Printf("[gClient] Graceful shutdown\n")
-
 }
