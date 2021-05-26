@@ -8,21 +8,23 @@ from re import compile as re_compile
 from math import ceil
 from matplotlib import pyplot as plt
 import seaborn as sns
+from humanize import precisedelta
+from datetime import timedelta
 
 
-def visualise(data: Dict[Tuple[int, int], int], sink: str, title: str) -> bool:
+def visualise(data: Dict[Tuple[int, int], int], sink: str, title: str, subtitle: str) -> bool:
     if not data:
         return False
 
     try:
-        tmp = [(f'{start}ms - {end}ms', count)
+        tmp = [(f'{start} - {end}ms', count)
                for (start, end), count in data.items()]
         x = [t[0] for t in tmp]
         y = [t[1] for t in tmp]
 
         with plt.style.context('seaborn-darkgrid'):
             fig = plt.Figure(
-                figsize=(16, 9),
+                figsize=(18, 9),
                 dpi=100)
 
             sns.barplot(
@@ -40,13 +42,10 @@ def visualise(data: Dict[Tuple[int, int], int], sink: str, title: str) -> bool:
                                fontsize=12,
                                color='black')
 
-            fig.gca().set_xlabel('Message Received After Delay',
-                                 labelpad=12)
-            fig.gca().set_ylabel('#-of Messages',
-                                 labelpad=12)
-            fig.gca().set_title(title,
-                                pad=16,
-                                fontsize=20)
+            fig.gca().set_xlabel('Message Received After Delay', labelpad=12)
+            fig.gca().set_ylabel('#-of Messages', labelpad=12)
+            fig.gca().set_title(subtitle, pad=6, fontsize=15)
+            fig.suptitle(title, fontsize=20, y=1)
 
             fig.savefig(
                 sink,
@@ -56,7 +55,7 @@ def visualise(data: Dict[Tuple[int, int], int], sink: str, title: str) -> bool:
 
         return True
     except Exception as e:
-        print(f'Error : ${e}')
+        print(f'Error : {e}')
         return False
 
 
@@ -94,7 +93,7 @@ def splitted_delay_spectrum(delays: List[int], slot: int) -> List[Tuple[int, int
     return slots
 
 
-def accumulate_data(file: str, bucket: Dict[int, int]):
+def accumulate_data(file: str, bucket: Dict[int, int], record_duration: Dict[str, int]):
     with open(file) as fd:
         while True:
             ln = fd.readline()
@@ -104,6 +103,12 @@ def accumulate_data(file: str, bucket: Dict[int, int]):
             ts = [i.strip() for i in ln.split(';')][:2]
             sent = int(ts[0])
             received = int(ts[1])
+
+            if sent < record_duration['start']:
+                record_duration['start'] = sent
+            if received > record_duration['end']:
+                record_duration['end'] = received
+
             diff = received - sent
             if diff not in bucket:
                 bucket[diff] = 1
@@ -147,13 +152,19 @@ def main():
         print('Directory walk found no file !')
         return
 
+    record_duration = {'start': 1 << 64 - 1, 'end': 0}
     bucket = {}
     for file in found:
-        accumulate_data(file, bucket)
+        accumulate_data(file, bucket, record_duration)
+
+    dt = timedelta(
+        milliseconds=record_duration['end'] - record_duration['start'])
 
     slots = splitted_delay_spectrum(bucket.keys(), args.slot)
-    print(visualise(aggregated_count_by_slot(slots, bucket), 'out.png',
-                    'Aggregated Message Reception Delay with `pub0sub`'))
+    print(visualise(aggregated_count_by_slot(slots, bucket),
+                    'out.png',
+                    'Aggregated Message Reception Delay with `pub0sub`',
+                    f'Recorded for {precisedelta(dt)}'))
 
 
 if __name__ == '__main__':
