@@ -3,17 +3,23 @@ package utils
 import (
 	"bytes"
 	"encoding/binary"
+	"os"
 	"time"
 
 	"github.com/itzmeanjan/pub0sub/ops"
 	"github.com/itzmeanjan/pub0sub/publisher"
 )
 
-type Publishers []*publisher.Publisher
+type Publishers struct {
+	Handles []*publisher.Publisher
+	Logs    []*os.File
+	Buffer  *bytes.Buffer
+}
 
 func (p *Publishers) PublishMsg(topics TopicList) error {
-	for _, pub := range *p {
+	for i, pub := range p.Handles {
 		if pub.Connected() {
+			start := uint64(time.Now().UnixNano() / 1_000_000)
 			msg, err := prepareMsg(topics)
 			if err != nil {
 				return err
@@ -21,6 +27,11 @@ func (p *Publishers) PublishMsg(topics TopicList) error {
 
 			if _, err := pub.Publish(msg); err != nil {
 				return err
+			}
+			end := uint64(time.Now().UnixNano() / 1_000_000)
+
+			if p.Logs != nil {
+				LogMsg(p.Logs[i], p.Buffer, start, end, "na")
 			}
 		}
 	}

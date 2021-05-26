@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"context"
 	"flag"
 	"fmt"
@@ -21,6 +22,7 @@ var (
 	client = flag.Uint64("client", 1, "#-of concurrent publishers to use")
 	repeat = flag.Uint64("repeat", 1, "Repeat publish ( = 0 :-> infinite )")
 	delay  = flag.Duration("delay", time.Duration(100)*time.Millisecond, "Gap between subsequent message publish")
+	out    = flag.Bool("out", true, "Persist publisher log")
 	topics utils.TopicList
 )
 
@@ -39,7 +41,12 @@ func main() {
 
 	ctx, cancel := context.WithCancel(context.Background())
 	fullAddr := fmt.Sprintf("%s:%d", *addr, *port)
-	pubs := make(utils.Publishers, 0, *client)
+	pubs := make([]*publisher.Publisher, 0, *client)
+
+	var logHandles []*os.File
+	if *out {
+		logHandles = make([]*os.File, 0, *client)
+	}
 
 	for i := 0; i < int(*client); i++ {
 		pub, err := publisher.New(ctx, proto, fullAddr)
@@ -49,8 +56,24 @@ func main() {
 		}
 
 		pubs = append(pubs, pub)
+		if *out {
+			fd, err := os.OpenFile(fmt.Sprintf("log_pub_%d.csv", i), os.O_CREATE|os.O_RDWR, 0x1b6)
+			if err != nil {
+				log.Printf("[gClient] Error : %s\n", err.Error())
+				return
+			}
+
+			defer func() {
+				if err := fd.Close(); err != nil {
+					log.Printf("[gClient] Error : %s\n", err.Error())
+				}
+			}()
+
+			logHandles = append(logHandles, fd)
+		}
 	}
 
+	publishers := utils.Publishers{Handles: pubs, Logs: logHandles, Buffer: new(bytes.Buffer)}
 	log.Printf("[gClient] Connected to %s [ %d client(s) ] ✅\n", fullAddr, *client)
 
 	interruptChan := make(chan os.Signal, 1)
@@ -70,7 +93,7 @@ func main() {
 				<-time.After(*delay)
 
 				start := time.Now()
-				if err := pubs.PublishMsg(topics); err != nil {
+				if err := publishers.PublishMsg(topics); err != nil {
 					log.Printf("[gClient] Error : %s\n", err.Error())
 					break OUT_1
 				}
@@ -93,7 +116,7 @@ func main() {
 				<-time.After(*delay)
 
 				start := time.Now()
-				if err := pubs.PublishMsg(topics); err != nil {
+				if err := publishers.PublishMsg(topics); err != nil {
 					log.Printf("[gClient] Error : %s\n", err.Error())
 					break OUT_2
 				}

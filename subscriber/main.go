@@ -64,7 +64,7 @@ func main() {
 				var fd *os.File
 
 				if *out {
-					handle, err := os.OpenFile(fmt.Sprintf("log_%d.csv", id), os.O_CREATE|os.O_RDWR, 0x1b6)
+					handle, err := os.OpenFile(fmt.Sprintf("log_sub_%d.csv", id), os.O_CREATE|os.O_RDWR, 0x1b6)
 					if err != nil {
 						log.Printf("[gClient] Error : %s\n", err.Error())
 						return

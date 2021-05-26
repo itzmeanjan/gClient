@@ -137,3 +137,6 @@ You can disable log generation
 
 ---
 
+### Visualiser
+
+Running above simulation collects
