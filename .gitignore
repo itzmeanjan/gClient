@@ -16,3 +16,4 @@
 
 gclient-*
 log_*.csv
+venv
