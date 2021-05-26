@@ -83,6 +83,41 @@ May be run with/ anyhow you please
 ./gclient-pub -addr 127.0.0.1 -port 13000 -topic a -topic b -topic c -repeat 0 -client 64 -delay 500ms
 ```
 
+Log generation is by-default enabled, which generates some new files in **CWD**. If you see **N**-many new log files, it's due to you've set `client` cli option to **N**.
+
+```bash
+find . -name 'log_pub_*.csv' # you may try
+```
+
+File content might look like
+
+publisher-sent-at-timestamp `( t1 )` | publisher-completed-queueing-at-timestamp `( t2 )` | topic-name
+--- | --- | ---
+1622035122511 | 1622035122512 | na
+1622035123013 | 1622035123013 | na
+1622035123514 | 1622035123514 | na
+1622035124017 | 1622035124017 | na
+
+> You can ignore `topic-name` column.
+
+These timestamps will satisfy happens before relation
+
+```
+t2 >= t1
+```
+
+File content to be consumed by visualiser script. See [below](#visualiser).
+
+---
+
+You can disable log generation
+
+```bash
+./gclient-pub -topic a -repeat 0 -out false # enabled by default
+```
+
+---
+
 ### Subscriber
 
 Another binary ready to use -- `gclient-sub`
@@ -107,7 +142,7 @@ You might want to run it with
 When log generation is enabled **( default )** you'll see some new log files created in **CWD**. There'll will be **N**-many log files generated, where **N = concurrent subscriber count**
 
 ```bash
-find . -name 'log_*.csv' # you may try
+find . -name 'log_sub_*.csv' # you may try
 ```
 
 They're nothing but append only logs in CSV format, recording
@@ -139,4 +174,55 @@ You can disable log generation
 
 ### Visualiser
 
-Running above simulation collects
+Running above simulation collects performance log for
+
+- Publisher(s) : **Time taken to publish each message**
+- Subscriber(s) : **Message reception delay**
+
+---
+
+**How ?** 
+
+Each message published carries millisecond precision unix timestamp serialised in **8 bytes**, which is when message was actually sent from publisher process.
+
+Using this subscriber can deduce how long did it take for a message to arrive to destination from when it was actually prepared on publisher process.
+
+This is what's logged by subscriber [simulator](#subscriber).
+
+On otherside publisher process logs how long did it take for a message to be queued for publishing. This donotes queueing message doesn't really guarantee it's already delivered, rather it says it's queued for delivery.
+
+**It's async** ⭐️.
+
+> All timestamp in milliseconds.
+
+---
+
+Assuming you've already run simulator, you must have logs generated
+
+```bash
+find . -name 'log_*.csv'
+```
+
+Now you can stop simualtor & start visualiser tool
+
+```bash
+cd visualiser
+python3 -m venv venv # for first time
+source venv/bin/activate
+
+pip install -r requirements.txt # install dependencies
+
+python main.py -h # do check it
+python main.py ./.. 12
+
+deactivate
+```
+
+If everything goes well, it'll generate two bar charts depicting performance in terms of system **delay in reception/ latency in publishing** in CWD.
+
+
+```bash
+find . -name '*.png' # file names are self-explanatory
+```
+
+Yes, that's it.
