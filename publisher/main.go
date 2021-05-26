@@ -10,6 +10,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/itzmeanjan/gClient/utils"
 	"github.com/itzmeanjan/pub0sub/publisher"
 )
 
@@ -20,7 +21,7 @@ var (
 	client = flag.Uint64("client", 1, "#-of concurrent publishers to use")
 	repeat = flag.Uint64("repeat", 1, "Repeat publish ( = 0 :-> infinite )")
 	delay  = flag.Duration("delay", time.Duration(100)*time.Millisecond, "Gap between subsequent message publish")
-	topics topicList
+	topics utils.TopicList
 )
 
 func main() {
@@ -41,7 +42,7 @@ func main() {
 
 	ctx, cancel := context.WithCancel(context.Background())
 	fullAddr := fmt.Sprintf("%s:%d", *addr, *port)
-	pubs := make(publishers, 0, *client)
+	pubs := make(utils.Publishers, 0, *client)
 
 	for i := 0; i < int(*client); i++ {
 
@@ -74,7 +75,7 @@ func main() {
 				<-time.After(*delay)
 
 				start := time.Now()
-				if err := pubs.publishMsg(topics); err != nil {
+				if err := pubs.PublishMsg(topics); err != nil {
 					log.Printf("[gClient] Error : %s\n", err.Error())
 					break OUT_1
 				}
@@ -97,7 +98,7 @@ func main() {
 				<-time.After(*delay)
 
 				start := time.Now()
-				if err := pubs.publishMsg(topics); err != nil {
+				if err := pubs.PublishMsg(topics); err != nil {
 					log.Printf("[gClient] Error : %s\n", err.Error())
 					break OUT_2
 				}

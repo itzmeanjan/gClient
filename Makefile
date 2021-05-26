@@ -1,4 +1,4 @@
 SHELL := /bin/bash
 
 build_pub:
-	go build -o gclient-pub
+	pushd publisher; go build -o ../gclient-pub; popd
