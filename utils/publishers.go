@@ -12,19 +12,17 @@ import (
 type Publishers []*publisher.Publisher
 
 func (p *Publishers) PublishMsg(topics TopicList) error {
-	msg, err := prepareMsg(topics)
-	if err != nil {
-		return err
-	}
-
 	for _, pub := range *p {
-
 		if pub.Connected() {
+			msg, err := prepareMsg(topics)
+			if err != nil {
+				return err
+			}
+
 			if _, err := pub.Publish(msg); err != nil {
 				return err
 			}
 		}
-
 	}
 
 	return nil
