@@ -3,7 +3,7 @@
 from argparse import ArgumentParser
 from os.path import abspath, isabs, isdir, join
 from os import walk
-from typing import Dict, List, Tuple
+from typing import Dict, List, Pattern, Tuple
 from re import compile as re_compile
 from math import ceil
 from matplotlib import pyplot as plt
@@ -12,7 +12,7 @@ from humanize import precisedelta
 from datetime import timedelta
 
 
-def visualise(data: Dict[Tuple[int, int], int], sink: str, title: str, subtitle: str) -> bool:
+def visualise(data: Dict[Tuple[int, int], int], sink: str, xlabel: str, ylabel: str, title: str, subtitle: str) -> bool:
     if not data:
         return False
 
@@ -42,8 +42,8 @@ def visualise(data: Dict[Tuple[int, int], int], sink: str, title: str, subtitle:
                                fontsize=12,
                                color='black')
 
-            fig.gca().set_xlabel('Message Received After Delay', labelpad=12)
-            fig.gca().set_ylabel('#-of Messages', labelpad=12)
+            fig.gca().set_xlabel(xlabel, labelpad=12)
+            fig.gca().set_ylabel(ylabel, labelpad=12)
             fig.gca().set_title(subtitle, pad=6, fontsize=15)
             fig.suptitle(title, fontsize=20, y=1)
 
@@ -78,6 +78,9 @@ def aggregated_count_by_slot(slots: List[Tuple[int, int]], bucket: Dict[int, int
 def splitted_delay_spectrum(delays: List[int], slot: int) -> List[Tuple[int, int]]:
     min_delay = min(delays)
     max_delay = max(delays)
+    if max_delay - min_delay < 2*slot:
+        return [(min_delay, max_delay)]
+
     skip_by = ceil((max_delay - min_delay) / slot)
 
     slots = []
@@ -118,9 +121,8 @@ def accumulate_data(file: str, bucket: Dict[int, int], record_duration: Dict[str
     return
 
 
-def find_files(dir: str) -> List[str]:
+def find_files(dir: str, reg: Pattern) -> List[str]:
     found = []
-    reg = re_compile(r'^(log_\d+\.csv)$')
     for (dirpath, _, files) in walk(dir):
         if dirpath == dir:
             for file in files:
@@ -147,24 +149,53 @@ def main():
         print('Expected path to directory !')
         return
 
-    found = find_files(target_dir)
-    if not found:
-        print('Directory walk found no file !')
+    pub_reg = re_compile(r'^(log_pub_\d+\.csv)$')
+    sub_reg = re_compile(r'^(log_sub_\d+\.csv)$')
+
+    pub_log = find_files(target_dir, pub_reg)
+    if not pub_log:
+        print('Directory walk found no publisher log !')
         return
 
-    record_duration = {'start': 1 << 64 - 1, 'end': 0}
-    bucket = {}
-    for file in found:
-        accumulate_data(file, bucket, record_duration)
+    sub_log = find_files(target_dir, sub_reg)
+    if not sub_log:
+        print('Directory walk found no subscriber log !')
+        return
 
-    dt = timedelta(
-        milliseconds=record_duration['end'] - record_duration['start'])
+    pub_record_duration = {'start': 1 << 64 - 1, 'end': 0}
+    pub_bucket = {}
+    for file in pub_log:
+        accumulate_data(file, pub_bucket, pub_record_duration)
 
-    slots = splitted_delay_spectrum(bucket.keys(), args.slot)
-    print(visualise(aggregated_count_by_slot(slots, bucket),
-                    'out.png',
-                    'Aggregated Message Reception Delay with `pub0sub`',
-                    f'Recorded for {precisedelta(dt)}'))
+    sub_record_duration = {'start': 1 << 64 - 1, 'end': 0}
+    sub_bucket = {}
+    for file in sub_log:
+        accumulate_data(file, sub_bucket, sub_record_duration)
+
+    pub_dt = timedelta(
+        milliseconds=pub_record_duration['end'] - pub_record_duration['start'])
+    sub_dt = timedelta(
+        milliseconds=sub_record_duration['end'] - sub_record_duration['start'])
+
+    pub_slots = splitted_delay_spectrum(pub_bucket.keys(), args.slot)
+    status = visualise(aggregated_count_by_slot(pub_slots, pub_bucket),
+                       'pub_out.png',
+                       'Message Received After Delay',
+                       '#-of Messages',
+                       'Aggregated Message Reception Delay with `pub0sub`',
+                       f'Recorded for {precisedelta(pub_dt)}')
+    if status:
+        print(f'Publisher visualisation ✅')
+
+    sub_slots = splitted_delay_spectrum(sub_bucket.keys(), args.slot)
+    status = visualise(aggregated_count_by_slot(sub_slots, sub_bucket),
+                       'sub_out.png',
+                       'Message Sending Latency',
+                       '#-of Messages',
+                       'Aggregated Message Sending Latency with `pub0sub`',
+                       f'Recorded for {precisedelta(sub_dt)}')
+    if status:
+        print(f'Subscriber visualisation ✅')
 
 
 if __name__ == '__main__':
