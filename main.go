@@ -55,6 +55,8 @@ func main() {
 
 	}
 
+	log.Printf("Connected to %s [ %d client(s) ] ✅\n", fullAddr, *client)
+
 	interruptChan := make(chan os.Signal, 1)
 	signal.Notify(interruptChan, syscall.SIGTERM, syscall.SIGINT)
 
@@ -71,10 +73,13 @@ func main() {
 			default:
 				<-time.After(*delay)
 
+				start := time.Now()
 				if err := pubs.publishMsg(topics); err != nil {
 					log.Printf("[gClient] Error : %s\n", err.Error())
 					break OUT_1
 				}
+
+				log.Printf("Publish iteration : %d [ in %s ] ✅\n", i+1, time.Since(start))
 			}
 
 		}
@@ -91,10 +96,13 @@ func main() {
 			default:
 				<-time.After(*delay)
 
+				start := time.Now()
 				if err := pubs.publishMsg(topics); err != nil {
 					log.Printf("[gClient] Error : %s\n", err.Error())
 					break OUT_2
 				}
+
+				log.Printf("Publish iteration : %d [ in %s ] ✅\n", i+1, time.Since(start))
 			}
 
 		}
