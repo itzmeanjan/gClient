@@ -3,8 +3,27 @@
 from argparse import ArgumentParser
 from os.path import abspath, isabs, isdir, join
 from os import walk
-from typing import Dict, List
+from typing import Dict, List, Tuple
 from re import compile as re_compile
+from math import ceil
+
+
+def splitted_delay_spectrum(delays: List[int], slot: int) -> List[Tuple[int, int]]:
+    min_delay = min(delays)
+    max_delay = max(delays)
+    skip_by = ceil((max_delay - min_delay) / slot)
+
+    slots = []
+    while len(slots) < slot:
+        next_delay = min_delay + skip_by
+        if next_delay > max_delay:
+            slots.append((min_delay, max_delay))
+            break
+
+        slots.append((min_delay, next_delay))
+        min_delay += (skip_by + 1)
+
+    return slots
 
 
 def accumulate_data(file: str, bucket: Dict[int, int]):
@@ -43,6 +62,8 @@ def find_files(dir: str) -> List[str]:
 def main():
     parser = ArgumentParser(description='Visualise `pub0sub` performance data')
     parser.add_argument('path', type=str, help='path to data directory')
+    parser.add_argument(
+        'slot', type=int, help='split delay spectrum into slots')
     args = parser.parse_args()
 
     target_dir = None
@@ -59,8 +80,11 @@ def main():
         return
 
     bucket = {}
-    accumulate_data(found[0], bucket)
-    print(bucket)
+    for file in found:
+        accumulate_data(file, bucket)
+
+    delays = bucket.keys()
+    print(splitted_delay_spectrum(delays, args.slot))
 
 
 if __name__ == '__main__':
