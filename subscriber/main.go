@@ -52,18 +52,26 @@ func main() {
 		func(sub *subscriber.Subscriber) {
 
 			go func() {
+				defer func() {
+					if err := sub.Disconnect(); err != nil {
+						log.Printf("[gClient] Failed to disconnect : %s\n", err.Error())
+					}
+				}()
+
 				for {
 					select {
 					case <-ctx.Done():
-						if err := sub.Disconnect(); err != nil {
-							log.Printf("[gClient] Failed to disconnect : %s\n", err.Error())
-						}
 						return
 
 					case <-sub.Watch():
-						if msg := sub.Next(); msg != nil {
-							log.Printf("[gClient] Received |>| Data : `%s`, Topic : `%s`\n", msg.Data, msg.Topic)
+						msg := sub.Next()
+						ts, err := utils.DeserialiseMsg(msg)
+						if err != nil {
+							log.Printf("[gClient] Error : %s\n", err.Error())
+							return
 						}
+
+						log.Printf("[gClient] Received : `%d` from `%s`\n", ts, msg.Topic)
 					}
 				}
 			}()

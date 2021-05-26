@@ -3,6 +3,7 @@ package utils
 import (
 	"bytes"
 	"encoding/binary"
+	"errors"
 	"time"
 
 	"github.com/itzmeanjan/pub0sub/ops"
@@ -39,4 +40,18 @@ func prepareMsg(topics TopicList) (*ops.Msg, error) {
 	}
 
 	return &ops.Msg{Topics: topics, Data: buf.Bytes()}, nil
+}
+
+func DeserialiseMsg(msg *ops.PushedMessage) (uint64, error) {
+	if msg == nil {
+		return 0, errors.New("nil message")
+	}
+
+	var ts uint64
+	buf := bytes.NewReader(msg.Data)
+	if err := binary.Read(buf, binary.BigEndian, &ts); err != nil {
+		return 0, err
+	}
+
+	return ts, nil
 }
