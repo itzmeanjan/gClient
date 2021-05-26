@@ -45,7 +45,6 @@ func main() {
 	pubs := make(utils.Publishers, 0, *client)
 
 	for i := 0; i < int(*client); i++ {
-
 		pub, err := publisher.New(ctx, proto, fullAddr)
 		if err != nil {
 			log.Printf("[gClient] Error : %s\n", err.Error())
@@ -53,10 +52,9 @@ func main() {
 		}
 
 		pubs = append(pubs, pub)
-
 	}
 
-	log.Printf("Connected to %s [ %d client(s) ] ✅\n", fullAddr, *client)
+	log.Printf("[gClient] Connected to %s [ %d client(s) ] ✅\n", fullAddr, *client)
 
 	interruptChan := make(chan os.Signal, 1)
 	signal.Notify(interruptChan, syscall.SIGTERM, syscall.SIGINT)
@@ -80,7 +78,7 @@ func main() {
 					break OUT_1
 				}
 
-				log.Printf("Publish iteration : %d [ in %s ] ✅\n", i+1, time.Since(start))
+				log.Printf("[gClient] Publish iteration : %d [ in %s ] ✅\n", i+1, time.Since(start))
 			}
 
 		}
@@ -103,7 +101,7 @@ func main() {
 					break OUT_2
 				}
 
-				log.Printf("Publish iteration : %d [ in %s ] ✅\n", i+1, time.Since(start))
+				log.Printf("[gClient] Publish iteration : %d [ in %s ] ✅\n", i+1, time.Since(start))
 			}
 
 		}
