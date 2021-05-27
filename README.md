@@ -1,6 +1,10 @@
 # gClient
 Generic Pub/Sub client for 0hub - it's a simulator 🤖
 
+**🔥 16k concurrent connection on consumer grade machine -- with `pub0sub` 🚀**
+
+![16k](./sc/16k.png)
+
 ## Motivation
 
 Recently I published one fast, light-weight pub/sub system `pub0sub` --- powered by async I/O. I'm interested in collecting some statistics of its performance in real-world, so I'm writing these simulators & visualisation tool.
