@@ -247,3 +247,26 @@ find . -name '*.png' # file names are self-explanatory
 ```
 
 Yes, that's it.
+
+---
+
+**Note**
+
+Using visualisation tool, I also found out all messages delivered in ordered manner.
+
+Each message carries one unique id, which is monotonically increasing
+
+```
+<8-byte-msg-id> + <8-byte-generation-timestamp>
+```
+
+When received, deserialisation performed on message extracts out both fields
+
+- `msg-id` : Helps in checking orderliness/ finding if any message missing
+- `generation-timestamp` : Unix millisecond precision timestamp used for checking end-to-end message reception delay i.e. _from message sent from producer process to received in consumer process_
+
+These are appended in log file, which will be inspected by visualiser tool & that's when it checks whether each message received in order or not.
+
+> If interested check `accumulate_data(...)` [here](./visualiser/main.py)
+
+---
