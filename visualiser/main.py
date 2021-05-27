@@ -116,13 +116,11 @@ def accumulate_data(file: str, bucket: Dict[int, int], record_duration: Dict[str
 
             if check_order and ordered:
                 idx = int(vals[2])
-                if last_id == 0:
-                    last_id = idx
-                else:
+                if last_id != 0:
                     if not (idx == last_id or idx == last_id + 1):
                         ordered = False
-                    else:
-                        last_id = idx
+
+                last_id = idx
 
             if sent < record_duration['start']:
                 record_duration['start'] = sent
