@@ -10,26 +10,40 @@ import (
 	"github.com/itzmeanjan/pub0sub/ops"
 )
 
-func DeserialiseMsg(msg *ops.PushedMessage) (uint64, error) {
+func DeserialiseMsg(msg *ops.PushedMessage) (uint64, uint64, error) {
 	if msg == nil {
-		return 0, errors.New("nil message")
+		return 0, 0, errors.New("nil message")
 	}
 
-	var ts uint64
-	buf := bytes.NewReader(msg.Data)
+	var (
+		id  uint64
+		ts  uint64
+		buf = bytes.NewReader(msg.Data)
+	)
+
+	if err := binary.Read(buf, binary.BigEndian, &id); err != nil {
+		return 0, 0, err
+	}
 	if err := binary.Read(buf, binary.BigEndian, &ts); err != nil {
-		return 0, err
+		return 0, 0, err
 	}
 
-	return ts, nil
+	return id, ts, nil
 }
 
-func LogMsg(fd *os.File, buf *bytes.Buffer, sent uint64, received uint64, topic string) error {
+func LogMsg(fd *os.File, buf *bytes.Buffer, id, sent, received uint64, topic string) error {
 	defer func() {
 		buf.Reset()
 	}()
 
-	n, err := buf.WriteString(fmt.Sprintf("%d; %d; %s\n", sent, received, topic))
+	var template string
+	if id != 0 {
+		template = fmt.Sprintf("%d; %d; %d; %s\n", sent, received, id, topic)
+	} else {
+		template = fmt.Sprintf("%d; %d; %s\n", sent, received, topic)
+	}
+
+	n, err := buf.WriteString(template)
 	if err != nil {
 		return err
 	}

@@ -14,13 +14,16 @@ type Publishers struct {
 	Handles []*publisher.Publisher
 	Logs    []*os.File
 	Buffer  *bytes.Buffer
+	Idx     uint64
 }
 
 func (p *Publishers) PublishMsg(topics TopicList) error {
+	p.Idx++
+
 	for i, pub := range p.Handles {
 		if pub.Connected() {
 			start := uint64(time.Now().UnixNano() / 1_000_000)
-			msg, err := prepareMsg(topics)
+			msg, err := p.prepareMsg(topics)
 			if err != nil {
 				return err
 			}
@@ -31,7 +34,7 @@ func (p *Publishers) PublishMsg(topics TopicList) error {
 			end := uint64(time.Now().UnixNano() / 1_000_000)
 
 			if p.Logs != nil {
-				LogMsg(p.Logs[i], p.Buffer, start, end, "na")
+				LogMsg(p.Logs[i], p.Buffer, 0, start, end, "na")
 			}
 		}
 	}
@@ -39,10 +42,13 @@ func (p *Publishers) PublishMsg(topics TopicList) error {
 	return nil
 }
 
-func prepareMsg(topics TopicList) (*ops.Msg, error) {
+func (p *Publishers) prepareMsg(topics TopicList) (*ops.Msg, error) {
 	now := uint64(time.Now().UnixNano() / 1_000_000)
 
 	buf := new(bytes.Buffer)
+	if err := binary.Write(buf, binary.BigEndian, p.Idx); err != nil {
+		return nil, err
+	}
 	if err := binary.Write(buf, binary.BigEndian, now); err != nil {
 		return nil, err
 	}

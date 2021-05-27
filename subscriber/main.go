@@ -87,13 +87,13 @@ func main() {
 					case <-sub.Watch():
 						received := uint64(time.Now().UnixNano() / 1_000_000)
 						msg := sub.Next()
-						sent, err := utils.DeserialiseMsg(msg)
+						id, sent, err := utils.DeserialiseMsg(msg)
 						if err != nil {
 							log.Printf("[gClient] Error : %s\n", err.Error())
 							return
 						}
 
-						if err := utils.LogMsg(fd, buf, sent, received, msg.Topic); err != nil {
+						if err := utils.LogMsg(fd, buf, id, sent, received, msg.Topic); err != nil {
 							log.Printf("[gClient] Error : %s\n", err.Error())
 							break
 						}
