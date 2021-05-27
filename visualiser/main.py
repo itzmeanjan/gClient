@@ -100,16 +100,29 @@ def splitted_delay_spectrum(delays: List[int], slot: int) -> List[Tuple[int, int
     return slots
 
 
-def accumulate_data(file: str, bucket: Dict[int, int], record_duration: Dict[str, int]):
+def accumulate_data(file: str, bucket: Dict[int, int], record_duration: Dict[str, int], check_order: bool) -> bool:
+    last_id = 0
+    ordered = check_order
+
     with open(file) as fd:
         while True:
             ln = fd.readline()
             if not ln:
                 break
 
-            ts = [i.strip() for i in ln.split(';')][:2]
-            sent = int(ts[0])
-            received = int(ts[1])
+            vals = [i.strip() for i in ln.split(';')][:3]
+            sent = int(vals[0])
+            received = int(vals[1])
+
+            if check_order and ordered:
+                idx = int(vals[2])
+                if last_id == 0:
+                    last_id = idx
+                else:
+                    if not (idx == last_id or idx == last_id + 1):
+                        ordered = False
+                    else:
+                        last_id = idx
 
             if sent < record_duration['start']:
                 record_duration['start'] = sent
@@ -122,7 +135,7 @@ def accumulate_data(file: str, bucket: Dict[int, int], record_duration: Dict[str
             else:
                 bucket[diff] = bucket[diff] + 1
 
-    return
+    return ordered
 
 
 def find_files(dir: str, reg: Pattern) -> List[str]:
@@ -170,12 +183,19 @@ def main():
     pub_record_duration = {'start': 1 << 64 - 1, 'end': 0}
     pub_bucket = {}
     for file in pub_log:
-        accumulate_data(file, pub_bucket, pub_record_duration)
+        accumulate_data(file, pub_bucket, pub_record_duration, False)
 
     sub_record_duration = {'start': 1 << 64 - 1, 'end': 0}
     sub_bucket = {}
+    order_check = True
     for file in sub_log:
-        accumulate_data(file, sub_bucket, sub_record_duration)
+        ordered = accumulate_data(file, sub_bucket, sub_record_duration, True)
+        if not ordered:
+            order_check = False
+            print(f'Orderliness check failed for {file} !')
+
+    if order_check:
+        print('Message orderliness check passed ✅')
 
     pub_dt = timedelta(
         milliseconds=pub_record_duration['end'] - pub_record_duration['start'])

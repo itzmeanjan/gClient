@@ -98,7 +98,7 @@ func main() {
 							break
 						}
 
-						log.Printf("[gClient] Received : `%d` from `%s`\n", sent, msg.Topic)
+						log.Printf("[gClient] Received : `%d : %d` from `%s`\n", sent, id, msg.Topic)
 					}
 				}
 			}()
