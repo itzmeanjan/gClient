@@ -93,9 +93,11 @@ func main() {
 							return
 						}
 
-						if err := utils.LogMsg(fd, buf, id, sent, received, msg.Topic); err != nil {
-							log.Printf("[gClient] Error : %s\n", err.Error())
-							break
+						if *out {
+							if err := utils.LogMsg(fd, buf, id, sent, received, msg.Topic); err != nil {
+								log.Printf("[gClient] Error : %s\n", err.Error())
+								break
+							}
 						}
 
 						log.Printf("[gClient] Received : `%d : %d` from `%s`\n", sent, id, msg.Topic)
