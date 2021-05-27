@@ -46,11 +46,32 @@ And probably run `0hub` with
 
 **The server is up & running now.**
 
-Using this simulator you're well capable of running lots of publishers/ subscribers on same machine **( or differente machines )** --- each of them will connect to `0hub` using its own socket connection & use same through out its lifetime.
+Using this simulator you're well capable of running lots of publishers/ subscribers on same machine **( or differente machines, talking over LAN )** --- each of them will connect to `0hub` using its own socket connection & use same through out its lifetime.
 
 You'll require to increase max open file descriptor count **( system wide & per process )**, or you'll see `too many open files`
 
 > **Disclaimer :** I only ran this simulation on MacOS & GNU/Linux.
+
+## Result
+
+Here's result of running this simulation on MacOS x86_64 + 8GB RAM + 8 cores, where 
+
+```
+subscriber count = 32
+subscriber count = 64
+topic = 4
+
+Each publisher publishes each message on each topic
+Each subscriber subscribes to each of 4 topics
+```
+
+Most messages are queued for publishing in `< 5ms`.
+
+![pub_perf](./sc/pub_out.png)
+
+Each queued message is eventually processed by `0hub` - sending it to destination in async fashion.
+
+![sub_perf](./sc/sub_out.png)
 
 ## Usage
 
