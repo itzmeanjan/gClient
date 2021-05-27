@@ -78,7 +78,11 @@ def aggregated_count_by_slot(slots: List[Tuple[int, int]], bucket: Dict[int, int
 def splitted_delay_spectrum(delays: List[int], slot: int) -> List[Tuple[int, int]]:
     min_delay = min(delays)
     max_delay = max(delays)
-    if max_delay - min_delay < 2*slot:
+    if max_delay - min_delay < slot:
+        diff = ceil((max_delay - min_delay) / 2)
+        if min_delay+diff+1 < max_delay:
+            return [(min_delay, min_delay + diff), (min_delay+diff+1, max_delay)]
+
         return [(min_delay, max_delay)]
 
     skip_by = ceil((max_delay - min_delay) / slot)
@@ -149,6 +153,7 @@ def main():
         print('Expected path to directory !')
         return
 
+    print('Preparing data')
     pub_reg = re_compile(r'^(log_pub_\d+\.csv)$')
     sub_reg = re_compile(r'^(log_sub_\d+\.csv)$')
 
@@ -180,9 +185,9 @@ def main():
     pub_slots = splitted_delay_spectrum(pub_bucket.keys(), args.slot)
     status = visualise(aggregated_count_by_slot(pub_slots, pub_bucket),
                        'pub_out.png',
-                       'Message Received After Delay',
+                       'Message Sending Latency',
                        '#-of Messages',
-                       'Aggregated Message Reception Delay with `pub0sub`',
+                       'Aggregated Message Sending Latency with `pub0sub`',
                        f'Recorded for {precisedelta(pub_dt)}')
     if status:
         print(f'Publisher visualisation ✅')
@@ -190,9 +195,9 @@ def main():
     sub_slots = splitted_delay_spectrum(sub_bucket.keys(), args.slot)
     status = visualise(aggregated_count_by_slot(sub_slots, sub_bucket),
                        'sub_out.png',
-                       'Message Sending Latency',
+                       'Message Received After Delay',
                        '#-of Messages',
-                       'Aggregated Message Sending Latency with `pub0sub`',
+                       'Aggregated Message Reception Delay with `pub0sub`',
                        f'Recorded for {precisedelta(sub_dt)}')
     if status:
         print(f'Subscriber visualisation ✅')
