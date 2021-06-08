@@ -56,6 +56,38 @@ You'll require to increase max open file descriptor count **( system wide & per 
 
 > **Disclaimer :** I only ran this simulation on MacOS & GNU/Linux.
 
+---
+
+**Dockerised 0Hub**
+
+Build hub
+
+```bash
+# git clone https://github.com/itzmeanjan/pub0sub.git
+# cd pub0sub
+# -- continuing after this --
+
+docker build -t 0hub . # assuming docker daemon is running
+
+docker images # image `0hub` must be listed
+```
+
+Run hub
+
+```bash
+docker run --name hub -d 0hub # not available on 127.0.0.1:*
+
+docker ps # container `hub` must be listed
+```
+
+Stop and remove hub
+
+```bash
+docker stop hub
+docker rm hub # removes container
+docker rmi -f 0hub # removes image
+```
+
 ## Result
 
 Here's result of running this simulation on MacOS x86_64 + 8GB RAM + 8 cores, where 
@@ -143,6 +175,48 @@ You can disable log generation
 
 ---
 
+**Dockerised Publisher**
+
+Assuming you've docker daemon up & running
+
+```bash
+make docker_pub
+docker images # image `pub` must be listed
+```
+
+Run publisher
+
+```bash
+make run_pub
+docker ps # container `pub` must be listed
+```
+
+Stop publisher
+
+```bash
+docker stop pub
+```
+
+Remove publisher container
+
+```bash
+docker rm pub
+```
+
+Remove publisher image
+
+```bash
+docker rmi -f pub
+```
+
+Read container log
+
+```bash
+docker logs pub # add `-f` for following
+```
+
+---
+
 ### Subscriber
 
 Another binary ready to use -- `gclient-sub`
@@ -193,6 +267,48 @@ You can disable log generation
 
 ```bash
 ./gclient-sub -topic a -out false # enabled by default
+```
+
+---
+
+**Dockerised Subscriber**
+
+Assuming you've docker daemon up & running
+
+```bash
+make docker_sub
+docker images # image `sub` must be listed
+```
+
+Run subscriber
+
+```bash
+make run_sub
+docker ps # container `sub` must be listed
+```
+
+Stop subscriber
+
+```bash
+docker stop sub
+```
+
+Remove subscriber container
+
+```bash
+docker rm sub
+```
+
+Remove subscriber image
+
+```bash
+docker rmi -f sub
+```
+
+Read container log
+
+```bash
+docker logs sub # add `-f` for following
 ```
 
 ---
