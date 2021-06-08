@@ -8,4 +8,4 @@ FROM alpine:latest
 RUN apk add --no-cache ca-certificates
 WORKDIR /app
 COPY --from=builder /app/gclient-pub /usr/bin
-ENTRYPOINT [ "gclient-pub", "-addr", "172.17.0.2", "-port", "13000", "-topic", "a", "-topic", "b", "-repeat", "0", "-client", "1", "-delay", "1s", "-out", "false" ]
+ENTRYPOINT [ "gclient-pub", "-addr", "172.17.0.2", "-port", "13000", "-topic", "a", "-repeat", "0", "-client", "8192", "-delay", "1s", "-out", "false" ]

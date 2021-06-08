@@ -5,6 +5,20 @@ Generic Pub/Sub client for 0hub - it's a simulator 🤖
 
 ![16k](./sc/16k.png)
 
+---
+
+**🔥 With Docker's virtual networking, I recently tested `0hub` with 100k+ concurrent TCP connections🚀**
+
+![100k+](./sc/100k+.png)
+
+>  **8192** publishers publishing every 1s on single topic which has **98304** concurrently active subscribers :: **106_496 active TCP connections**
+
+**100K Testing Hardware :** Acceptable resource utilisation on consumer grade machine with i3 (Gen-V); ~12GB RAM; 4 CPUs; HDD ( no disk ops though ) running GNU/Linux based OS
+
+![100k+_resource](./sc/100k+_resource.png)
+
+---
+
 ## Motivation
 
 Recently I published one fast, light-weight pub/sub system `pub0sub` --- powered by async I/O. I'm interested in collecting some statistics of its performance in real-world, so I'm writing these simulators & visualisation tool.
