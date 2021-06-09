@@ -17,12 +17,12 @@ import (
 
 var (
 	proto  = "tcp"
-	addr   = flag.String("addr", "127.0.0.1", "Connect to address")
-	port   = flag.Uint64("port", 13000, "Connect to port")
-	client = flag.Uint64("client", 1, "#-of concurrent publishers to use")
-	repeat = flag.Uint64("repeat", 1, "Repeat publish ( = 0 :-> infinite )")
-	delay  = flag.Duration("delay", time.Duration(100)*time.Millisecond, "Gap between subsequent message publish")
-	out    = flag.Bool("out", true, "Persist publisher log")
+	addr   = flag.String("addr", utils.GetAddr(), "Connect to address")
+	port   = flag.Uint64("port", utils.GetPort(), "Connect to port")
+	client = flag.Uint64("client", utils.GetClientCount(), "#-of concurrent publishers to use")
+	repeat = flag.Uint64("repeat", utils.GetRepeatCount(), "Repeat publish ( = 0 :-> infinite )")
+	delay  = flag.Duration("delay", utils.GetDelay(), "Gap between subsequent message publish")
+	out    = flag.Bool("out", utils.GetLoggingPreference(), "Persist publisher log")
 	topics utils.TopicList
 )
 

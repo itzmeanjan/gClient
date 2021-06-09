@@ -17,11 +17,11 @@ import (
 
 var (
 	proto    = "tcp"
-	addr     = flag.String("addr", "127.0.0.1", "Connect to address")
-	port     = flag.Uint64("port", 13000, "Connect to port")
-	client   = flag.Uint64("client", 1, "#-of concurrent subscribers to use")
-	capacity = flag.Uint64("capacity", 256, "Pending message queue capacity")
-	out      = flag.Bool("out", true, "Persist subscriber log")
+	addr     = flag.String("addr", utils.GetAddr(), "Connect to address")
+	port     = flag.Uint64("port", utils.GetPort(), "Connect to port")
+	client   = flag.Uint64("client", utils.GetClientCount(), "#-of concurrent subscribers to use")
+	capacity = flag.Uint64("capacity", utils.GetCapacity(), "Pending message queue capacity")
+	out      = flag.Bool("out", utils.GetLoggingPreference(), "Persist subscriber log")
 	topics   utils.TopicList
 )
 
