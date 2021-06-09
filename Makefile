@@ -13,7 +13,7 @@ docker_sub:
 	docker build -t sub -f ./subscriber/Dockerfile .
 
 run_pub:
-	docker run --name pub -d pub
+	docker run --name pub --env-file pub.env -d pub
 
 run_sub:
-	docker run --name sub -d sub
+	docker run --name sub --env-file sub.env -d sub

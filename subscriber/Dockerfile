@@ -8,4 +8,9 @@ FROM alpine:latest
 RUN apk add --no-cache ca-certificates
 WORKDIR /app
 COPY --from=builder /app/gclient-sub /usr/bin
-ENTRYPOINT [ "gclient-sub", "-addr", "172.17.0.2", "-port", "13000", "-topic", "a", "-out", "false", "-client", "8192" ]
+ENV ADDR="172.17.0.2"
+ENV PORT=13000
+ENV CLIENT_COUNT=8192
+ENV LOG="false"
+ENV CAPACITY=256
+ENTRYPOINT [ "gclient-sub", "-topic", "a" ]
