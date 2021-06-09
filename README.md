@@ -198,7 +198,7 @@ make docker_pub
 docker images # image `pub` must be listed
 ```
 
-Run publisher
+Run publisher. You may want to make changes to ENV variables, take a look at default `pub.env`.
 
 ```bash
 make run_pub
@@ -294,7 +294,7 @@ make docker_sub
 docker images # image `sub` must be listed
 ```
 
-Run subscriber
+Run subscriber. If you want to make changes to ENV variables, take a look at default `sub.env`.
 
 ```bash
 make run_sub
