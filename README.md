@@ -1,3 +1,7 @@
+> **Warning**
+
+**I've stopped maintaining this project !**
+
 # gClient
 Generic Pub/Sub client for 0hub - it's a simulator 🤖
 
